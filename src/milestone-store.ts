@@ -5,6 +5,7 @@ import path from "node:path";
 import {
   RECORD_GUIDANCE,
   REFUSED_UNSAVED_CRITERION,
+  REFUSED_UNSAVED_WORK,
   MilestoneRefusal,
   MilestoneUserError,
   assertMilestoneComplete,
