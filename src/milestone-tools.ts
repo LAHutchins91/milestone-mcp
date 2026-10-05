@@ -130,7 +130,7 @@ export function createMilestoneMcpServer(options: { userId: string; entitled: bo
     "define_milestone",
     "Add one milestone to a draft set: a title and the definition of that milestone. After milestones are approved, a new milestone is refused until accept_milestone_change applies an add_milestone suggestion.",
     { milestoneSetId: id, title: short, definition },
-    write,
+    { ...write, destructiveHint: true },
     async (args) => options.store.defineMilestone(options.userId, {
       milestoneSetId: args.milestoneSetId as string,
       title: args.title as string,
@@ -142,7 +142,7 @@ export function createMilestoneMcpServer(options: { userId: string; entitled: bo
     "save_acceptance_criterion",
     "Save one acceptance criterion, which is what done means for that milestone. After milestones are approved, a new criterion is refused until an accepted add_criterion suggestion. This does not mark the milestone complete.",
     { milestoneSetId: id, milestoneId: id, statement },
-    write,
+    { ...write, destructiveHint: true },
     async (args) => options.store.saveAcceptanceCriterion(options.userId, {
       milestoneSetId: args.milestoneSetId as string,
       milestoneId: args.milestoneId as string,
@@ -154,7 +154,7 @@ export function createMilestoneMcpServer(options: { userId: string; entitled: bo
     "save_deliverable",
     "Save one deliverable that belongs to a milestone. After milestones are approved, an extra deliverable is refused until an accepted add_deliverable suggestion. Do not invent a deliverable that was not saved.",
     { milestoneSetId: id, milestoneId: id, title: short, detail },
-    write,
+    { ...write, destructiveHint: true },
     async (args) => options.store.saveDeliverable(options.userId, {
       milestoneSetId: args.milestoneSetId as string,
       milestoneId: args.milestoneId as string,
@@ -167,7 +167,7 @@ export function createMilestoneMcpServer(options: { userId: string; entitled: bo
     "save_work_item",
     "Save one piece of work under a milestone so it can later be marked done. After milestones are approved, new work is refused until an accepted add_work_item suggestion. Unsaved work cannot be marked done.",
     { milestoneSetId: id, milestoneId: id, title: short },
-    write,
+    { ...write, destructiveHint: true, idempotentHint: true },
     async (args) => options.store.saveWorkItem(options.userId, {
       milestoneSetId: args.milestoneSetId as string,
       milestoneId: args.milestoneId as string,
@@ -179,7 +179,7 @@ export function createMilestoneMcpServer(options: { userId: string; entitled: bo
     "record_criterion_met",
     "Record that one saved acceptance criterion was met. The criterion must already be saved. This does not by itself tell the client the milestone is complete or that the next payment is released.",
     { milestoneSetId: id, milestoneId: id, criterionId: id },
-    { ...write, idempotentHint: true },
+    { ...write, destructiveHint: true, idempotentHint: true },
     async (args) => options.store.recordCriterionMet(options.userId, {
       milestoneSetId: args.milestoneSetId as string,
       milestoneId: args.milestoneId as string,
@@ -225,7 +225,7 @@ export function createMilestoneMcpServer(options: { userId: string; entitled: bo
     "write_client_wording",
     "Record what the assistant may tell the client about milestones, what done means, completion, and payment release. After approval, different wording is refused until an accepted revise_client_wording suggestion. The assistant must not go beyond this wording and the facts in read_milestone_set.",
     { milestoneSetId: id, wording },
-    write,
+    { ...write, destructiveHint: true },
     async (args) => options.store.writeClientWording(options.userId, {
       milestoneSetId: args.milestoneSetId as string,
       wording: args.wording as string
@@ -236,7 +236,7 @@ export function createMilestoneMcpServer(options: { userId: string; entitled: bo
     "approve_milestones",
     "Approve the draft milestone definitions and acceptance criteria. Pass confirmed true only after the freelancer explicitly approves them. A draft is not a commitment.",
     { milestoneSetId: id, confirmed: z.literal(true) },
-    { ...write, idempotentHint: true },
+    { ...write, destructiveHint: true, idempotentHint: true },
     async ({ milestoneSetId }) => options.store.approveMilestones(options.userId, milestoneSetId as string)
   );
 
