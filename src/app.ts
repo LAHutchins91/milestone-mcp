@@ -4,7 +4,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { z } from "zod";
 import { PRO_REQUIRED, PUBLIC_MCP_METHODS, SIGN_IN_REQUIRED, hasMilestoneAccess } from "./access.js";
 import { checkoutForm, milestoneUserId, readStripeEvent, stripePost, subscriptionPatch } from "./billing.js";
-import { MCP_CORS_HEADERS, mcpBrowserOriginAllowed } from "./mcp-clients.js";
+import { MCP_CORS_HEADERS, ensureStreamableHttpAccept, mcpBrowserOriginAllowed } from "./mcp-clients.js";
 import { validateMcpClaims } from "./mcp-claims.js";
 import { createFileMilestoneStore, defaultMilestoneDataPath, type MilestoneStore } from "./milestone-store.js";
 import { createMilestoneMcpServer } from "./milestone-tools.js";
@@ -219,7 +219,7 @@ export function createApp(deps: MilestoneDeps): Express {
     res.status(204).end();
   });
 
-  app.post("/mcp", async (req, res) => {
+  app.post("/mcp", ensureStreamableHttpAccept, async (req, res) => {
     if (!guardMcpOrigin(req, res)) return;
     if (!allowPublic(`mcp:${req.ip}`, 300, 60_000)) {
       return res.status(429).set("Retry-After", "60").json({ error: "Too many requests. Retry in one minute." });
