@@ -3,17 +3,15 @@
   "name": "io.github.LAHutchins91/milestone",
   "title": "Milestone",
   "description": "Approved freelance milestone definitions and what done means, shared with AI assistants over MCP.",
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "repository": {
+    "url": "https://github.com/LAHutchins91/milestone-mcp",
+    "source": "github"
+  },
   "remotes": [
     {
       "type": "streamable-http",
       "url": "https://milestone-continuity2.vercel.app/mcp"
-    }
-  ],
-  "icons": [
-    {
-      "src": "https://raw.githubusercontent.com/LAHutchins91/milestone-mcp/main/logo.jpg",
-      "mimeType": "image/jpeg"
     }
   ]
 }
