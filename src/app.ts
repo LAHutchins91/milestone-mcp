@@ -271,3 +271,8 @@ export function createApp(deps: MilestoneDeps): Express {
 
   return app;
 }
+
+// Vercel Express loads this module and requires the Express app as the default export.
+export const runtimeDeps = defaultDeps();
+export const app = createApp(runtimeDeps);
+export default app;
