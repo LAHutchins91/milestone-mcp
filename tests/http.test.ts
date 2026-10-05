@@ -7,7 +7,7 @@ import path from "node:path";
 import type { Express, Request } from "express";
 import { afterEach, describe, expect, it } from "vitest";
 import { PRO_REQUIRED, SIGN_IN_REQUIRED } from "../src/access.js";
-import { createApp, type MilestoneDeps } from "../src/app.js";
+import milestoneApp, { createApp, type MilestoneDeps } from "../src/app.js";
 import { createFileMilestoneStore } from "../src/milestone-store.js";
 import { MILESTONE_TOOL_NAMES } from "../src/milestone-tools.js";
 import { protectedResourceMetadata } from "../src/plugin-auth.js";
@@ -64,6 +64,19 @@ function mcpHeaders(origin?: string): Record<string, string> {
 }
 
 describe("HTTP MCP", () => {
+  it("default-exports the Express app used by Vercel", async () => {
+    expect(typeof milestoneApp).toBe("function");
+    const url = await listen(milestoneApp);
+    const response = await fetch(`${url}/mcp`, {
+      method: "POST",
+      headers: mcpHeaders(),
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" })
+    });
+    expect(response.status).toBe(200);
+    const body = await response.json() as { result: { tools: Array<{ name: string }> } };
+    expect(body.result.tools.map((tool) => tool.name).sort()).toEqual([...MILESTONE_TOOL_NAMES].sort());
+  });
+
   it("returns Milestone tools from tools/list without a credential", async () => {
     const options = await deps();
     const url = await listen(createApp(options));
