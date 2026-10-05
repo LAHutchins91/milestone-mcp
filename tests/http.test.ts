@@ -167,4 +167,52 @@ describe("HTTP MCP", () => {
     const health = await fetch(`${url}/health`);
     expect(await health.json()).toMatchObject({ ok: true, service: "milestone", oauthConfigured: true, billingConfigured: true });
   });
+
+  it("serves the OpenAI apps domain challenge as plain text", async () => {
+    const previous = process.env.OPENAI_APPS_CHALLENGE;
+    const options = await deps();
+    const url = await listen(createApp(options));
+    try {
+      delete process.env.OPENAI_APPS_CHALLENGE;
+      const missing = await fetch(`${url}/.well-known/openai-apps-challenge`);
+      expect(missing.status).toBe(404);
+      expect(missing.headers.get("content-type")).toContain("text/plain");
+      expect(await missing.text()).toBe("Verification is not configured.");
+
+      process.env.OPENAI_APPS_CHALLENGE = "challenge-token-value";
+      const present = await fetch(`${url}/.well-known/openai-apps-challenge`);
+      expect(present.status).toBe(200);
+      expect(present.headers.get("content-type")).toContain("text/plain");
+      expect(await present.text()).toBe("challenge-token-value");
+      expect(present.headers.get("content-type")).not.toContain("text/html");
+    } finally {
+      if (previous === undefined) delete process.env.OPENAI_APPS_CHALLENGE;
+      else process.env.OPENAI_APPS_CHALLENGE = previous;
+    }
+  });
+
+  it("publishes a Continuity-grade privacy policy without public prices", async () => {
+    const options = await deps();
+    const url = await listen(createApp(options));
+    const response = await fetch(`${url}/privacy`);
+    expect(response.status).toBe(200);
+    const html = await response.text();
+    expect(html).toContain("October 5, 2026");
+    expect(html).toContain("Ouroboros Apps");
+    expect(html).toContain("Lawrence Hutchins");
+    expect(html).toContain("milestone definitions");
+    expect(html).toContain("acceptance criteria");
+    expect(html).toContain("deliverables");
+    expect(html).toContain("client wording");
+    expect(html).toContain("account email");
+    expect(html).toContain('href="/support"');
+    expect(html).toContain("Supabase");
+    expect(html).toContain("Vercel");
+    expect(html).toContain("Google");
+    expect(html).toContain("Stripe");
+    expect(html).toContain("ChatGPT");
+    expect(html).toContain("Control and retention");
+    expect(html).toContain("Security and changes");
+    expect(html).not.toMatch(/\$\s*\d/);
+  });
 });

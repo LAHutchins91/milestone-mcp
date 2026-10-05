@@ -119,6 +119,11 @@ export function createApp(deps: MilestoneDeps): Express {
   });
 
   app.use(express.json({ limit: "128kb" }));
+  app.get("/.well-known/openai-apps-challenge", (_req, res) => {
+    const token = process.env.OPENAI_APPS_CHALLENGE;
+    if (!token) return res.status(404).type("text").send("Verification is not configured.");
+    res.type("text").send(token);
+  });
   installPublicPages(app, deps.appBaseUrl, deps.supabaseUrl, deps.supabaseAnonKey);
   installPluginAuth(app, deps.appBaseUrl, deps.supabaseUrl, deps.supabaseAnonKey);
 
