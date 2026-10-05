@@ -6,7 +6,7 @@ import { PRO_REQUIRED, PUBLIC_MCP_METHODS, SIGN_IN_REQUIRED, hasMilestoneAccess 
 import { checkoutForm, milestoneUserId, readStripeEvent, stripePost, subscriptionPatch } from "./billing.js";
 import { MCP_CORS_HEADERS, ensureStreamableHttpAccept, mcpBrowserOriginAllowed } from "./mcp-clients.js";
 import { validateMcpClaims } from "./mcp-claims.js";
-import { createFileMilestoneStore, defaultMilestoneDataPath, type MilestoneStore } from "./milestone-store.js";
+import { resolveMilestoneStore, type MilestoneStore } from "./milestone-store.js";
 import { createMilestoneMcpServer } from "./milestone-tools.js";
 import { installPluginAuth } from "./plugin-auth.js";
 import { installPublicPages } from "./public-pages.js";
@@ -70,7 +70,7 @@ export function defaultDeps(): MilestoneDeps {
     stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET ?? "",
     stripePriceMonthly: process.env.STRIPE_PRICE_MONTHLY ?? "",
     stripePriceYearly: process.env.STRIPE_PRICE_YEARLY ?? "",
-    store: createFileMilestoneStore(process.env.MILESTONE_DATA_PATH ?? defaultMilestoneDataPath()),
+    store: resolveMilestoneStore(),
     authenticate: (req) => authenticateWithSupabase(req, supabaseUrl, supabaseAnonKey),
     validateClaims: (token, userId) => validateMcpClaims(token, userId, `${supabaseUrl}/auth/v1`, `${appBaseUrl}/mcp`)
   };
