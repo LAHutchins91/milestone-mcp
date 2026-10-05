@@ -267,6 +267,100 @@ function emptyData(): FileData {
   return { version: 1, profiles: {}, milestoneSets: {}, supportRequests: [] };
 }
 
+
+type StoreBackend = {
+  load(): Promise<FileData>;
+  save(data: FileData): Promise<void>;
+};
+
+function createFileBackend(filePath: string): StoreBackend {
+  return {
+    async load() {
+      try {
+        const text = await readFile(filePath, "utf8");
+        if (!text.trim()) return emptyData();
+        const parsed = JSON.parse(text) as FileData;
+        if (parsed.version !== 1 || !parsed.profiles || !parsed.milestoneSets || !Array.isArray(parsed.supportRequests)) {
+          throw new MilestoneUserError("Milestone data could not be read.");
+        }
+        return parsed;
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === "ENOENT") return emptyData();
+        if (error instanceof MilestoneUserError) throw error;
+        throw new MilestoneUserError("Milestone data could not be read.");
+      }
+    },
+    async save(data) {
+      await mkdir(path.dirname(filePath), { recursive: true });
+      const tmp = path.join(path.dirname(filePath), `.${path.basename(filePath)}.${process.pid}.${randomUUID()}.tmp`);
+      await writeFile(tmp, JSON.stringify(data), "utf8");
+      await rename(tmp, filePath);
+    }
+  };
+}
+
+function createSupabaseBackend(opts: { supabaseUrl: string; serviceRoleKey: string }): StoreBackend {
+  const base = opts.supabaseUrl.replace(/\/+$/, "");
+  const headers = {
+    apikey: opts.serviceRoleKey,
+    Authorization: `Bearer ${opts.serviceRoleKey}`,
+    "Content-Type": "application/json"
+  };
+  const loadUrl = `${base}/rest/v1/rpc/milestone_store_load`;
+  const saveUrl = `${base}/rest/v1/rpc/milestone_store_save`;
+
+  async function loadRow(): Promise<{ doc: FileData; revision: number } | null> {
+    const response = await fetch(loadUrl, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ p_id: "main" })
+    });
+    if (!response.ok) throw new MilestoneUserError("Milestone data could not be read.");
+    const payload = (await response.json()) as { doc?: FileData; revision?: number } | null;
+    if (!payload) return null;
+    if (!payload.doc || typeof payload.revision !== "number") {
+      throw new MilestoneUserError("Milestone data could not be read.");
+    }
+    const row = { doc: payload.doc, revision: Number(payload.revision) };
+    if (!row.doc || row.doc.version !== 1 || !row.doc.profiles || !row.doc.milestoneSets || !Array.isArray(row.doc.supportRequests)) {
+      throw new MilestoneUserError("Milestone data could not be read.");
+    }
+    return row;
+  }
+
+  return {
+    async load() {
+      try {
+        const row = await loadRow();
+        return row ? row.doc : emptyData();
+      } catch (error) {
+        if (error instanceof MilestoneUserError) throw error;
+        throw new MilestoneUserError("Milestone data could not be read.");
+      }
+    },
+    async save(data) {
+      const maxAttempts = 8;
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        const existing = await loadRow();
+        const expected = existing ? existing.revision : 0;
+        const response = await fetch(saveUrl, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ p_id: "main", p_doc: data, p_expected_revision: expected })
+        });
+        if (!response.ok) throw new MilestoneUserError("Milestone data could not be saved.");
+        const result = (await response.json()) as { ok?: boolean; conflict?: boolean; revision?: number };
+        if (result && result.ok) return;
+        if (result && result.conflict) continue;
+        throw new MilestoneUserError("Milestone data could not be saved.");
+      }
+      throw new MilestoneUserError("Milestone data could not be saved.");
+    }
+  };
+}
+
+
+
 function nowIso(): string {
   return new Date().toISOString();
 }
@@ -372,31 +466,15 @@ function reopenIfNeeded(milestone: Milestone, stamp: string): void {
   milestone.updatedAt = stamp;
 }
 
-export function createFileMilestoneStore(filePath: string): MilestoneStore {
-  const resolved = assertMilestoneDataPath(filePath);
+export function createPersistedMilestoneStore(backend: StoreBackend): MilestoneStore {
   let chain: Promise<void> = Promise.resolve();
 
   async function read(): Promise<FileData> {
-    try {
-      const text = await readFile(resolved, "utf8");
-      if (!text.trim()) return emptyData();
-      const parsed = JSON.parse(text) as FileData;
-      if (parsed.version !== 1 || !parsed.profiles || !parsed.milestoneSets || !Array.isArray(parsed.supportRequests)) {
-        throw new MilestoneUserError("Milestone data could not be read.");
-      }
-      return parsed;
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") return emptyData();
-      if (error instanceof MilestoneUserError) throw error;
-      throw new MilestoneUserError("Milestone data could not be read.");
-    }
+    return backend.load();
   }
 
   async function write(data: FileData): Promise<void> {
-    await mkdir(path.dirname(resolved), { recursive: true });
-    const tmp = path.join(path.dirname(resolved), `.${path.basename(resolved)}.${process.pid}.${randomUUID()}.tmp`);
-    await writeFile(tmp, JSON.stringify(data), "utf8");
-    await rename(tmp, resolved);
+    await backend.save(data);
   }
 
   function enqueue<T>(fn: (data: FileData) => T, persist: boolean): Promise<T> {
@@ -790,3 +868,22 @@ export function createFileMilestoneStore(filePath: string): MilestoneStore {
 export function isMilestoneRefusal(error: unknown): error is MilestoneRefusal {
   return error instanceof MilestoneRefusal;
 }
+
+export function createFileMilestoneStore(filePath: string): MilestoneStore {
+  return createPersistedMilestoneStore(createFileBackend(filePath));
+}
+
+export function createSupabaseMilestoneStore(opts: { supabaseUrl: string; serviceRoleKey: string }): MilestoneStore {
+  return createPersistedMilestoneStore(createSupabaseBackend(opts));
+}
+
+/** Prefer Supabase when service role is configured; otherwise local JSON (dev). */
+export function resolveMilestoneStore(): MilestoneStore {
+  const supabaseUrl = (process.env.SUPABASE_URL ?? "").replace(/\/+$/, "");
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
+  if (supabaseUrl && serviceRoleKey) {
+    return createSupabaseMilestoneStore({ supabaseUrl, serviceRoleKey });
+  }
+  return createFileMilestoneStore(process.env.MILESTONE_DATA_PATH ?? defaultMilestoneDataPath());
+}
+
