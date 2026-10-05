@@ -9,11 +9,23 @@ describe("packaging", () => {
   it("matches the registry, image, and maintainer list", () => {
     const glama = JSON.parse(read("glama.json")) as { maintainers: string[] };
     expect(glama.maintainers).toEqual(["LAHutchins91"]);
-    const server = JSON.parse(read("server.json")) as { name: string; version: string; websiteUrl?: string; remotes: Array<{ type: string; url: string }> };
+    const server = JSON.parse(read("server.json")) as {
+      name: string;
+      version: string;
+      websiteUrl?: string;
+      remotes: Array<{ type: string; url: string }>;
+      icons?: Array<{ src: string; mimeType: string }>;
+    };
     expect(server.name).toBe("io.github.LAHutchins91/milestone");
     expect(server.version).toBe(MILESTONE_VERSION);
     expect(server.websiteUrl).toBeUndefined();
-    expect(server.remotes).toEqual([{ type: "streamable-http", url: "http://127.0.0.1:3000/mcp" }]);
+    expect(server.remotes).toEqual([{ type: "streamable-http", url: "https://milestone-continuity2.vercel.app/mcp" }]);
+    expect(server.icons).toEqual([
+      {
+        src: "https://raw.githubusercontent.com/LAHutchins91/milestone-mcp/main/logo.jpg",
+        mimeType: "image/jpeg",
+      },
+    ]);
     const docker = read("Dockerfile");
     expect(docker).toContain("FROM node:22-alpine AS build");
     expect(docker).toContain("USER node");
