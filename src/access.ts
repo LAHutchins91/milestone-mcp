@@ -3,7 +3,7 @@ export const TRIAL_PERIOD_DAYS = 14;
 
 export const SIGN_IN_REQUIRED = "Sign in to Milestone to use milestone tools.";
 
-export const PRO_REQUIRED = "A Milestone Pro subscription or active trial is required.";
+export const PRO_REQUIRED = "This Milestone account does not currently include access to Milestone tools. Check that you connected the intended account.";
 
 export const PUBLIC_MCP_METHODS = new Set([
   "initialize",
