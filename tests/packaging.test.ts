@@ -18,11 +18,11 @@ describe("packaging", () => {
     };
     expect(server.name).toBe("io.github.LAHutchins91/milestone");
     expect(server.version).toBe(MILESTONE_VERSION);
-    expect(server.websiteUrl).toBeUndefined();
+    expect(server.websiteUrl).toBe("https://milestone-continuity2.vercel.app");
     expect(server.remotes).toEqual([{ type: "streamable-http", url: "https://milestone-continuity2.vercel.app/mcp" }]);
     expect(server.icons).toEqual([
       {
-        src: "https://raw.githubusercontent.com/LAHutchins91/milestone-mcp/main/logo.jpg",
+        src: "https://milestone-continuity2.vercel.app/logo.jpg",
         mimeType: "image/jpeg",
       },
     ]);

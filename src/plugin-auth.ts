@@ -25,7 +25,7 @@ export function installPluginAuth(app: Express, baseUrl: string, supabaseUrl: st
     res.set({ "Cache-Control": "no-store", "Referrer-Policy": "no-referrer", "X-Frame-Options": "DENY" });
     res.type("html").send(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Connect Milestone</title>
 <style>body{margin:0;background:#0e1a22;color:#e7f2f4;font:17px/1.6 system-ui}main{max-width:560px;margin:8vh auto;padding:28px}a{color:#8fd0c8}button{font:inherit;padding:12px 16px;border-radius:10px;border:0;background:#1f6f78;color:#fff;cursor:pointer;margin:8px 8px 8px 0}button.secondary{background:transparent;border:1px solid #6f9aa0}section{border:1px solid #2c4650;border-radius:16px;padding:20px;margin:16px 0}label{display:block;margin:12px 0}input{box-sizing:border-box;width:100%;padding:10px;font:inherit;border:1px solid #6f9aa0;border-radius:8px;background:#09141a;color:inherit}[hidden]{display:none!important}#error{color:#ffb4b4}</style>
-</head><body><main><a href="/">Milestone</a><h1 id="heading">Connect your approved milestones</h1>
+</head><body><main><strong>Milestone</strong><h1 id="heading">Connect your approved milestones</h1>
 <p>Sign in with your Milestone account. Do not paste an API key or password into an MCP header.</p>
 <p id="status" role="status">Checking your sign-in…</p><p id="error" role="alert"></p>
 <button id="signout" class="secondary" hidden type="button">Use a different account</button>
@@ -35,7 +35,7 @@ export function installPluginAuth(app: Express, baseUrl: string, supabaseUrl: st
 <p>This form signs in on this page. It is not a header and it is not an API key.</p></details>
 <section id="consent" hidden><h2 id="client"></h2><p>This application will be able to:</p>
 <ul><li>Read your approved milestone definitions, acceptance criteria, and what done means.</li><li>Update them when you approve, including milestone changes you explicitly accept.</li><li>Read your account email and subscription status.</li></ul>
-<p>Your Pro or trial subscription still applies. The tools refuse saying a milestone is complete or that the next payment is released unless the saved acceptance criteria were met. They refuse an extra deliverable and marking unsaved work done. Billing changes are not available through the tools.</p>
+<p>Your Milestone account permissions still apply. The tools refuse saying a milestone is complete or that the next payment is released unless the saved acceptance criteria were met. They refuse an extra deliverable and marking unsaved work done. Billing changes are not available through the tools.</p>
 <p id="destination"></p><p id="scopes"></p>
 <button id="approve" type="button">Connect</button><button id="deny" class="secondary" type="button">Cancel</button></section>
 <section id="connections" hidden><p>You can disconnect an application at any time.</p><div id="grants"></div></section>
