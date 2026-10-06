@@ -85,3 +85,7 @@ OAuth uses the same idea as a Supabase authorization server with dynamic client 
 - `OPENAI_APPS_CHALLENGE` (plain-text token served at `/.well-known/openai-apps-challenge`; the path returns 404 when unset)
 
 Tool calls other than discovery require a signed-in account whose subscription status is `active` or `trialing`.
+
+---
+
+More from Ouroboros: https://ouroborosapps.com
