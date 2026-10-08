@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "milestone": {
+      "url": "https://milestone-continuity2.vercel.app/mcp"
+    }
+  }
+}
