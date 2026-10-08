@@ -2,9 +2,9 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.LAHutchins91/milestone",
   "title": "Milestone",
-  "description": "Approved freelance milestone definitions and what done means, shared with AI assistants over MCP.",
-  "version": "0.1.0",
-  "websiteUrl": "https://milestone-continuity2.vercel.app",
+  "description": "Approved freelance milestones and acceptance criteria for AI assistants.",
+  "version": "1.0.2",
+  "websiteUrl": "https://ouroborosapps.com/docs/milestone",
   "repository": {
     "url": "https://github.com/LAHutchins91/milestone-mcp",
     "source": "github"
